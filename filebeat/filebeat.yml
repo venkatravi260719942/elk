@@ -1,0 +1,32 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      templates:
+        - condition:
+            regexp.docker.container.image: "jenkins/inbound-agen*"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+    # - type: docker
+    #   templates:
+    #     - condition:
+    #         regexp.docker.container.image: "jenkins/jenkin*"
+    #       config:
+    #         - type: container
+    #           paths:
+    #             - /var/lib/docker/containers/${data.docker.container.id}/*.log
+processors:
+  - add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  username: elastic
+  password: Jarvis#@#
+  index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+
+setup.template.name: "filebeat"
+setup.template.pattern: "filebeat-*"
+
+setup.kibana:
+  host: "http://kibana:5601"

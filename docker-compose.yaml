@@ -1,0 +1,49 @@
+version: "3.0"
+services:
+  elasticsearch:
+    image: es_custom:v1
+    container_name: es
+    environment:
+      - "discovery.type=single-node"
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "9200:9200"
+    networks:
+      - log
+    restart: always
+
+  filebeat:
+    image: fb_custom:v2
+    container_name: fb
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log
+    command: filebeat -e -strict.perms=false
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - log
+    restart: always
+
+  kibana:
+    image: kibana:7.17.25
+    container_name: kb
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    networks:
+      - log
+    restart: always
+
+networks:
+  log:
+
